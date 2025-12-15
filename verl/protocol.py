@@ -195,7 +195,7 @@ class DataProto:
 
     def __getitem__(self, item: Union[int, slice, List[int], torch.Tensor]) -> Union["DataProto", "DataProtoItem"]:
         if isinstance(item, (int, slice)):
-            tensor_data = self.batch[item]
+            tensor_data = self.batch[item] if self.batch is not None else None
             non_tensor_data = {key: val[item] for key, val in self.non_tensor_batch.items()}
             return_type = DataProto if isinstance(item, slice) else DataProtoItem
             return return_type(batch=tensor_data, non_tensor_batch=non_tensor_data, meta_info=self.meta_info)
@@ -547,9 +547,41 @@ class DataProto:
         Returns:
             DataProto: concatenated DataProto
         """
+        if not data:
+            raise ValueError("Cannot concat empty list of DataProto")
+        
         batch_lst = [batch.batch for batch in data]
-        if batch_lst[0] is not None:
-            new_batch = torch.cat(batch_lst, dim=0)
+        # Filter out None and empty TensorDicts (batch_size=[] or batch_size=[0])
+        # Check both len(batch_size) > 0 and batch_size[0] > 0 to handle edge cases
+        valid_batch_lst = []
+        for b in batch_lst:
+            if b is not None:
+                try:
+                    batch_size = b.batch_size
+                    # batch_size should not be empty (len > 0) and first dimension should be > 0
+                    # This handles cases: [] -> len=0 (skip), [0] -> len=1 but [0]=0 (skip), [N] where N>0 -> valid
+                    if len(batch_size) > 0 and batch_size[0] > 0:
+                        valid_batch_lst.append(b)
+                except (AttributeError, RuntimeError, TypeError, IndexError):
+                    # If batch_size doesn't exist or causes error, skip this batch
+                    pass
+        
+        if len(valid_batch_lst) > 0:
+            try:
+                new_batch = torch.cat(valid_batch_lst, dim=0)
+            except RuntimeError as e:
+                # If concat still fails, provide more informative error with batch_size info
+                try:
+                    batch_sizes = [str(b.batch_size) for b in valid_batch_lst]
+                    raise RuntimeError(
+                        f"Failed to concat batches with batch_sizes: {batch_sizes}. "
+                        f"Original error: {str(e)}"
+                    ) from e
+                except:
+                    # If we can't even get batch_sizes, just raise the original error
+                    raise RuntimeError(
+                        f"Failed to concat batches. Original error: {str(e)}"
+                    ) from e
         else:
             new_batch = None
 

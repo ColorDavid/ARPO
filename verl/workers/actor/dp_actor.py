@@ -217,6 +217,12 @@ class DataParallelPPOActor(BasePPOActor):
         # select_keys = ["responses", "input_ids", "attention_mask", "position_ids", "old_log_probs", "advantages"]
         if self.config.use_kl_loss and not self.config.disable_kl:
             select_keys.append("ref_log_probs")
+        
+        # Add proposer keys for joint training
+        has_proposer_data = "proposer_log_probs" in data.batch and "proposer_advantages" in data.batch
+        if has_proposer_data:
+            select_keys.extend(["proposer_log_probs", "proposer_input_ids", "proposer_attention_mask", 
+                              "proposer_advantages", "proposer_response_mask"])
 
         if "multi_modal_inputs" in data.non_tensor_batch.keys():
             non_tensor_select_keys = ["multi_modal_inputs"]
@@ -246,14 +252,14 @@ class DataParallelPPOActor(BasePPOActor):
 
                 for micro_batch in micro_batches:
                     model_inputs = {**micro_batch.batch, **micro_batch.non_tensor_batch}
+                    
+                    # ========== Solver training ==========
                     responses = model_inputs["responses"]
                     response_length = responses.size(1)
                     attention_mask = model_inputs["attention_mask"]
                     response_mask = model_inputs["response_mask"][:, 1:]
-                    # response_mask = attention_mask[:, -response_length:]
                     old_log_probs = model_inputs["old_log_probs"]
                     advantages = model_inputs["advantages"][:, 1:]
-                    # breakpoint()
 
                     # all return: (bsz, response_length)
                     log_probs = self._forward_micro_batch(model_inputs, temperature=temperature)
@@ -281,10 +287,7 @@ class DataParallelPPOActor(BasePPOActor):
                         metrics["actor/kl_loss"] = kl_loss.detach().item()
                         metrics["actor/kl_coef"] = self.config.kl_coef
 
-                    loss = pg_loss / gradient_accumulation
-                    print(f'pg_loss: {pg_loss}')
-                    loss.backward()
-
+                    total_loss = pg_loss
                     batch_metrics = {
                         "actor/pg_loss": pg_loss.detach().item(),
                         "actor/pg_clipfrac_higher": pg_clipfrac_higher.detach().item(),
@@ -292,6 +295,92 @@ class DataParallelPPOActor(BasePPOActor):
                         "actor/entropy_loss": entropy_loss.detach().item(),
                         "actor/ppo_kl": ppo_kl.detach().item(),
                     }
+                    
+                    # ========== Proposer training (joint training) ==========
+                    if "proposer_log_probs" in model_inputs and "proposer_advantages" in model_inputs:
+                        proposer_old_log_probs = model_inputs["proposer_log_probs"]  # [bsz, question_length]
+                        proposer_advantages = model_inputs["proposer_advantages"]  # [bsz, question_length]
+                        proposer_response_mask = model_inputs.get("proposer_response_mask")
+                        if proposer_response_mask is None:
+                            # Fallback: create mask from log_probs shape
+                            proposer_response_mask = torch.ones_like(proposer_old_log_probs, dtype=torch.float32)
+                        
+                        # Create proposer model inputs for forward pass
+                        # Proposer input_ids and attention_mask contain the full sequence (prompt + question)
+                        # We need to create position_ids if not available
+                        proposer_model_inputs = {
+                            "input_ids": model_inputs["proposer_input_ids"],
+                            "attention_mask": model_inputs["proposer_attention_mask"],
+                        }
+                        
+                        # Generate position_ids for proposer if not available
+                        # Use the same format as solver (from original position_ids)
+                        if "position_ids" in model_inputs:
+                            # Use solver's position_ids format as template
+                            solver_position_ids = model_inputs["position_ids"]
+                            proposer_seq_len = model_inputs["proposer_input_ids"].shape[1]
+                            
+                            if solver_position_ids.dim() == 3:  # qwen2vl mrope format
+                                # Create position_ids for proposer sequence
+                                proposer_position_ids = torch.arange(proposer_seq_len, device=solver_position_ids.device, dtype=solver_position_ids.dtype)
+                                proposer_position_ids = proposer_position_ids.unsqueeze(0).unsqueeze(0).expand(3, -1, -1)  # (3, 1, seqlen)
+                                proposer_position_ids = proposer_position_ids.expand(-1, proposer_model_inputs["input_ids"].shape[0], -1)  # (3, bsz, seqlen)
+                            else:
+                                # 2D position_ids
+                                proposer_position_ids = torch.arange(proposer_seq_len, device=solver_position_ids.device, dtype=solver_position_ids.dtype)
+                                proposer_position_ids = proposer_position_ids.unsqueeze(0).expand(proposer_model_inputs["input_ids"].shape[0], -1)  # (bsz, seqlen)
+                            
+                            proposer_model_inputs["position_ids"] = proposer_position_ids
+                        else:
+                            # Fallback: create simple position_ids
+                            proposer_seq_len = model_inputs["proposer_input_ids"].shape[1]
+                            proposer_position_ids = torch.arange(proposer_seq_len, device=model_inputs["proposer_input_ids"].device)
+                            proposer_position_ids = proposer_position_ids.unsqueeze(0).expand(proposer_model_inputs["input_ids"].shape[0], -1)
+                            proposer_model_inputs["position_ids"] = proposer_position_ids
+                        
+                        # For proposer, we need to set "responses" to the generated question part
+                        # The responses are the question tokens (last part of input_ids)
+                        # Extract question length from old_log_probs
+                        question_length = proposer_old_log_probs.shape[1]
+                        proposer_responses = model_inputs["proposer_input_ids"][:, -question_length:]  # Extract question tokens
+                        proposer_model_inputs["responses"] = proposer_responses
+                        
+                        if "multi_modal_inputs" in model_inputs:
+                            proposer_model_inputs["multi_modal_inputs"] = model_inputs["multi_modal_inputs"]
+                        
+                        # Forward pass for proposer (generate question)
+                        proposer_log_probs_new = self._forward_micro_batch(proposer_model_inputs, temperature=temperature)
+                        
+                        # Compute proposer policy loss
+                        proposer_pg_loss, proposer_pg_clipfrac_higher, proposer_pg_clipfrac_lower, proposer_ppo_kl = core_algos.compute_policy_loss(
+                            old_log_probs=proposer_old_log_probs,
+                            log_probs=proposer_log_probs_new,
+                            advantages=proposer_advantages,
+                            response_mask=proposer_response_mask,
+                            clip_ratio_low=self.config.clip_ratio_low,
+                            clip_ratio_high=self.config.clip_ratio_high,
+                            clip_ratio_dual=self.config.clip_ratio_dual,
+                        )
+                        
+                        proposer_entropy_loss = -VF.masked_mean(proposer_log_probs_new, proposer_response_mask)
+                        
+                        # Add proposer loss to total loss (joint training)
+                        total_loss = total_loss + proposer_pg_loss
+                        
+                        batch_metrics.update({
+                            "actor/proposer_pg_loss": proposer_pg_loss.detach().item(),
+                            "actor/proposer_pg_clipfrac_higher": proposer_pg_clipfrac_higher.detach().item(),
+                            "actor/proposer_pg_clipfrac_lower": proposer_pg_clipfrac_lower.detach().item(),
+                            "actor/proposer_entropy_loss": proposer_entropy_loss.detach().item(),
+                            "actor/proposer_ppo_kl": proposer_ppo_kl.detach().item(),
+                        })
+                    
+                    loss = total_loss / gradient_accumulation
+                    print(f'total_loss (solver + proposer): {total_loss}, solver_pg_loss: {pg_loss.detach().item()}')
+                    if "proposer_log_probs" in model_inputs:
+                        print(f'proposer_pg_loss: {proposer_pg_loss.detach().item()}')
+                    loss.backward()
+                    
                     append_to_dict(metrics, batch_metrics)
 
                 grad_norm = self._optimizer_step()

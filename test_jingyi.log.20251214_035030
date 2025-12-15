@@ -1,0 +1,342 @@
+2025-12-14 03:44:19,711	INFO scripts.py:1242 -- Did not find any active Ray processes.
+2025-12-14 03:44:20,852	INFO usage_lib.py:472 -- Usage stats collection is enabled. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2025-12-14 03:44:20,852	INFO scripts.py:823 -- Local node IP: 10.220.5.126
+2025-12-14 03:44:21,983	SUCC scripts.py:860 -- --------------------
+2025-12-14 03:44:21,984	SUCC scripts.py:861 -- Ray runtime started.
+2025-12-14 03:44:21,984	SUCC scripts.py:862 -- --------------------
+2025-12-14 03:44:21,984	INFO scripts.py:864 -- Next steps
+2025-12-14 03:44:21,984	INFO scripts.py:867 -- To add another node to this Ray cluster, run
+2025-12-14 03:44:21,984	INFO scripts.py:870 --   ray start --address='10.220.5.126:6379'
+2025-12-14 03:44:21,984	INFO scripts.py:879 -- To connect to this Ray cluster:
+2025-12-14 03:44:21,984	INFO scripts.py:881 -- import ray
+2025-12-14 03:44:21,984	INFO scripts.py:882 -- ray.init()
+2025-12-14 03:44:21,984	INFO scripts.py:913 -- To terminate the Ray runtime, run
+2025-12-14 03:44:21,984	INFO scripts.py:914 --   ray stop
+2025-12-14 03:44:21,984	INFO scripts.py:917 -- To view the status of the cluster, use
+2025-12-14 03:44:21,984	INFO scripts.py:918 --   ray status
+my_scripts/test_jingyi.sh: line 14: on: command not found
++ on
+examples/my_test.sh: line 4: on: command not found
++ export WANDB_API_KEY=6978e0382998718ed96fa7ef0522b79570c23c4d
++ WANDB_API_KEY=6978e0382998718ed96fa7ef0522b79570c23c4d
++ MODEL_PATH=/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B
++ SYSTEM_PROMPT='You are helpful assistant.'
++ NUM_GPUS=8
++ NUM_ENVS=16
++ ROLLOUT_N=8
++ HORIZON=2
++ (( ROLLOUT_BSZ = NUM_ENVS/ROLLOUT_N ))
++ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:128
++ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:128
++ export CUDA_LAUNCH_BLOCKING=0
++ CUDA_LAUNCH_BLOCKING=0
++ python3 -m verl.trainer.main config=examples/config.yaml 'data.format_prompt=You are helpful assistant.' data.train_files=evaluation_examples/test_success_uitars1.5_wo_impossible.json data.val_files=evaluation_examples/test_success_uitars1.5_wo_impossible.json data.max_prompt_length=32000 data.max_response_length=2048 data.max_pixels=2116800 data.min_pixels=256 data.rollout_batch_size=2 worker.actor.fsdp.torch_dtype=bf16 worker.actor.optim.strategy=adamw_bf16 worker.actor.max_grad_norm=1.0 worker.actor.optim.lr=1e-6 worker.actor.optim.lr_warmup_ratio=0.05 worker.actor.ulysses_sequence_parallel_size=1 worker.actor.padding_free=true worker.actor.ppo_epochs=1 worker.actor.clip_ratio_low=0.2 worker.actor.clip_ratio_high=0.3 worker.actor.global_batch_size=1 worker.actor.micro_batch_size_per_device_for_update=1 worker.actor.micro_batch_size_per_device_for_experience=1 worker.actor.model.model_path=/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B worker.actor.offload.offload_optimizer=true worker.rollout.gpu_memory_utilization=0.6 worker.rollout.temperature=1.0 worker.rollout.n=8 worker.rollout.limit_images=2 worker.rollout.tensor_parallel_size=2 worker.rollout.max_num_batched_tokens=65536 algorithm.disable_kl=True algorithm.kl_coef=0 algorithm.enable_replay=True env.num_envs=16 env.max_steps=2 trainer.project_name=Safety_GUI trainer.experiment_name=safety_osharm_task trainer.n_gpus_per_node=8 'trainer.logger=[console,wandb]' trainer.nnodes=1 trainer.save_freq=16 trainer.save_limit=3 trainer.val_before_train=false trainer.val_freq=16 trainer.total_episodes=15
+2025-12-14 03:44:31,013	INFO worker.py:1636 -- Connecting to existing Ray cluster at address: 10.220.5.126:6379...
+2025-12-14 03:44:31,027	INFO worker.py:1821 -- Connected to Ray cluster.
+[33m(raylet)[0m [2025-12-14 03:44:31,887 E 53097 53131] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-12-14_03-44-20_853274_52733 is over 95% full, available space: 26.6472 GB; capacity: 878.618 GB. Object creation will fail if spilling is required.
+dict_keys(['node:10.220.5.126', 'object_store_memory', 'CPU', 'node:__internal_head__', 'accelerator_type:A800', 'memory', 'GPU'])
+[36m(Runner pid=60974)[0m {
+[36m(Runner pid=60974)[0m   "data": {
+[36m(Runner pid=60974)[0m     "train_files": "evaluation_examples/test_success_uitars1.5_wo_impossible.json",
+[36m(Runner pid=60974)[0m     "val_files": "evaluation_examples/test_success_uitars1.5_wo_impossible.json",
+[36m(Runner pid=60974)[0m     "prompt_key": "problem",
+[36m(Runner pid=60974)[0m     "answer_key": "answer",
+[36m(Runner pid=60974)[0m     "image_key": "images",
+[36m(Runner pid=60974)[0m     "max_prompt_length": 32000,
+[36m(Runner pid=60974)[0m     "max_response_length": 2048,
+[36m(Runner pid=60974)[0m     "rollout_batch_size": 2,
+[36m(Runner pid=60974)[0m     "val_batch_size": -1,
+[36m(Runner pid=60974)[0m     "format_prompt": "You are helpful assistant.",
+[36m(Runner pid=60974)[0m     "shuffle": true,
+[36m(Runner pid=60974)[0m     "seed": 1,
+[36m(Runner pid=60974)[0m     "max_pixels": 2116800,
+[36m(Runner pid=60974)[0m     "min_pixels": 256
+[36m(Runner pid=60974)[0m   },
+[36m(Runner pid=60974)[0m   "worker": {
+[36m(Runner pid=60974)[0m     "hybrid_engine": true,
+[36m(Runner pid=60974)[0m     "actor": {
+[36m(Runner pid=60974)[0m       "strategy": "fsdp",
+[36m(Runner pid=60974)[0m       "global_batch_size": 1,
+[36m(Runner pid=60974)[0m       "micro_batch_size_per_device_for_update": 1,
+[36m(Runner pid=60974)[0m       "micro_batch_size_per_device_for_experience": 1,
+[36m(Runner pid=60974)[0m       "max_grad_norm": 1.0,
+[36m(Runner pid=60974)[0m       "clip_ratio_low": 0.2,
+[36m(Runner pid=60974)[0m       "clip_ratio_high": 0.3,
+[36m(Runner pid=60974)[0m       "clip_ratio_dual": 3.0,
+[36m(Runner pid=60974)[0m       "ppo_epochs": 1,
+[36m(Runner pid=60974)[0m       "padding_free": true,
+[36m(Runner pid=60974)[0m       "ulysses_sequence_parallel_size": 1,
+[36m(Runner pid=60974)[0m       "use_torch_compile": true,
+[36m(Runner pid=60974)[0m       "model": {
+[36m(Runner pid=60974)[0m         "model_path": "/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B",
+[36m(Runner pid=60974)[0m         "tokenizer_path": "/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B",
+[36m(Runner pid=60974)[0m         "override_config": {},
+[36m(Runner pid=60974)[0m         "enable_gradient_checkpointing": true,
+[36m(Runner pid=60974)[0m         "trust_remote_code": false,
+[36m(Runner pid=60974)[0m         "freeze_vision_tower": false
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "optim": {
+[36m(Runner pid=60974)[0m         "lr": 1e-06,
+[36m(Runner pid=60974)[0m         "betas": [
+[36m(Runner pid=60974)[0m           0.9,
+[36m(Runner pid=60974)[0m           0.999
+[36m(Runner pid=60974)[0m         ],
+[36m(Runner pid=60974)[0m         "weight_decay": 0.01,
+[36m(Runner pid=60974)[0m         "strategy": "adamw_bf16",
+[36m(Runner pid=60974)[0m         "lr_warmup_ratio": 0.05,
+[36m(Runner pid=60974)[0m         "min_lr_ratio": null,
+[36m(Runner pid=60974)[0m         "warmup_style": "constant",
+[36m(Runner pid=60974)[0m         "training_steps": -1
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "fsdp": {
+[36m(Runner pid=60974)[0m         "enable_full_shard": true,
+[36m(Runner pid=60974)[0m         "enable_cpu_offload": false,
+[36m(Runner pid=60974)[0m         "enable_rank0_init": true,
+[36m(Runner pid=60974)[0m         "use_orig_params": false,
+[36m(Runner pid=60974)[0m         "torch_dtype": "bf16",
+[36m(Runner pid=60974)[0m         "fsdp_size": -1,
+[36m(Runner pid=60974)[0m         "mp_param_dtype": "bf16",
+[36m(Runner pid=60974)[0m         "mp_reduce_dtype": "fp32",
+[36m(Runner pid=60974)[0m         "mp_buffer_dtype": "fp32"
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "offload": {
+[36m(Runner pid=60974)[0m         "offload_params": true,
+[36m(Runner pid=60974)[0m         "offload_optimizer": true
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "global_batch_size_per_device": -1,
+[36m(Runner pid=60974)[0m       "disable_kl": true,
+[36m(Runner pid=60974)[0m       "use_kl_loss": true,
+[36m(Runner pid=60974)[0m       "kl_penalty": "low_var_kl",
+[36m(Runner pid=60974)[0m       "kl_coef": 0.0
+[36m(Runner pid=60974)[0m     },
+[36m(Runner pid=60974)[0m     "critic": {
+[36m(Runner pid=60974)[0m       "strategy": "fsdp",
+[36m(Runner pid=60974)[0m       "global_batch_size": 256,
+[36m(Runner pid=60974)[0m       "micro_batch_size_per_device_for_update": 4,
+[36m(Runner pid=60974)[0m       "micro_batch_size_per_device_for_experience": 16,
+[36m(Runner pid=60974)[0m       "max_grad_norm": 1.0,
+[36m(Runner pid=60974)[0m       "cliprange_value": 0.5,
+[36m(Runner pid=60974)[0m       "ppo_epochs": 1,
+[36m(Runner pid=60974)[0m       "padding_free": false,
+[36m(Runner pid=60974)[0m       "ulysses_sequence_parallel_size": 1,
+[36m(Runner pid=60974)[0m       "model": {
+[36m(Runner pid=60974)[0m         "model_path": null,
+[36m(Runner pid=60974)[0m         "tokenizer_path": null,
+[36m(Runner pid=60974)[0m         "override_config": {},
+[36m(Runner pid=60974)[0m         "enable_gradient_checkpointing": true,
+[36m(Runner pid=60974)[0m         "trust_remote_code": true,
+[36m(Runner pid=60974)[0m         "freeze_vision_tower": false
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "optim": {
+[36m(Runner pid=60974)[0m         "lr": 1e-06,
+[36m(Runner pid=60974)[0m         "betas": [
+[36m(Runner pid=60974)[0m           0.9,
+[36m(Runner pid=60974)[0m           0.999
+[36m(Runner pid=60974)[0m         ],
+[36m(Runner pid=60974)[0m         "weight_decay": 0.01,
+[36m(Runner pid=60974)[0m         "strategy": "adamw",
+[36m(Runner pid=60974)[0m         "lr_warmup_ratio": 0.0,
+[36m(Runner pid=60974)[0m         "min_lr_ratio": null,
+[36m(Runner pid=60974)[0m         "warmup_style": "constant",
+[36m(Runner pid=60974)[0m         "training_steps": -1
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "fsdp": {
+[36m(Runner pid=60974)[0m         "enable_full_shard": true,
+[36m(Runner pid=60974)[0m         "enable_cpu_offload": false,
+[36m(Runner pid=60974)[0m         "enable_rank0_init": false,
+[36m(Runner pid=60974)[0m         "use_orig_params": false,
+[36m(Runner pid=60974)[0m         "torch_dtype": null,
+[36m(Runner pid=60974)[0m         "fsdp_size": -1,
+[36m(Runner pid=60974)[0m         "mp_param_dtype": "bf16",
+[36m(Runner pid=60974)[0m         "mp_reduce_dtype": "fp32",
+[36m(Runner pid=60974)[0m         "mp_buffer_dtype": "fp32"
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "offload": {
+[36m(Runner pid=60974)[0m         "offload_params": false,
+[36m(Runner pid=60974)[0m         "offload_optimizer": false
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "global_batch_size_per_device": -1
+[36m(Runner pid=60974)[0m     },
+[36m(Runner pid=60974)[0m     "ref": {
+[36m(Runner pid=60974)[0m       "strategy": "fsdp",
+[36m(Runner pid=60974)[0m       "fsdp": {
+[36m(Runner pid=60974)[0m         "enable_full_shard": true,
+[36m(Runner pid=60974)[0m         "enable_cpu_offload": true,
+[36m(Runner pid=60974)[0m         "enable_rank0_init": true,
+[36m(Runner pid=60974)[0m         "use_orig_params": false,
+[36m(Runner pid=60974)[0m         "torch_dtype": null,
+[36m(Runner pid=60974)[0m         "fsdp_size": -1,
+[36m(Runner pid=60974)[0m         "mp_param_dtype": "bf16",
+[36m(Runner pid=60974)[0m         "mp_reduce_dtype": "fp32",
+[36m(Runner pid=60974)[0m         "mp_buffer_dtype": "fp32"
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "offload": {
+[36m(Runner pid=60974)[0m         "offload_params": false,
+[36m(Runner pid=60974)[0m         "offload_optimizer": false
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "micro_batch_size_per_device_for_experience": 1,
+[36m(Runner pid=60974)[0m       "padding_free": true,
+[36m(Runner pid=60974)[0m       "ulysses_sequence_parallel_size": 1,
+[36m(Runner pid=60974)[0m       "use_torch_compile": true
+[36m(Runner pid=60974)[0m     },
+[36m(Runner pid=60974)[0m     "reward": {
+[36m(Runner pid=60974)[0m       "reward_type": "function",
+[36m(Runner pid=60974)[0m       "score_function": "math",
+[36m(Runner pid=60974)[0m       "skip_special_tokens": true,
+[36m(Runner pid=60974)[0m       "harm_config": {
+[36m(Runner pid=60974)[0m         "safety_weight": 1.0,
+[36m(Runner pid=60974)[0m         "task_completion_weight": 0.5,
+[36m(Runner pid=60974)[0m         "format_weight": 0.1,
+[36m(Runner pid=60974)[0m         "safety_threshold": 0.5,
+[36m(Runner pid=60974)[0m         "enable_learnability_bonus": true,
+[36m(Runner pid=60974)[0m         "learnability_weight": 0.1,
+[36m(Runner pid=60974)[0m         "target_difficulty": 0.5,
+[36m(Runner pid=60974)[0m         "evaluator_config": {
+[36m(Runner pid=60974)[0m           "evaluator_type": "openai",
+[36m(Runner pid=60974)[0m           "model_name": "gpt-4",
+[36m(Runner pid=60974)[0m           "api_key": "sk-wIfAFRigBsJx1nBzzpQnVsyjloVy1ZXSfEj4ZzFZsuAldefd",
+[36m(Runner pid=60974)[0m           "api_base": "http://149.88.91.225:3000/v1",
+[36m(Runner pid=60974)[0m           "temperature": 0.0,
+[36m(Runner pid=60974)[0m           "max_tokens": 1024,
+[36m(Runner pid=60974)[0m           "timeout": 60.0,
+[36m(Runner pid=60974)[0m           "max_retries": 3,
+[36m(Runner pid=60974)[0m           "retry_delay": 1.0,
+[36m(Runner pid=60974)[0m           "batch_size": 10,
+[36m(Runner pid=60974)[0m           "use_async": true
+[36m(Runner pid=60974)[0m         },
+[36m(Runner pid=60974)[0m         "use_llm_evaluation": true
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "use_harm_reward_for_harm_tasks": true
+[36m(Runner pid=60974)[0m     },
+[36m(Runner pid=60974)[0m     "rollout": {
+[36m(Runner pid=60974)[0m       "name": "vllm",
+[36m(Runner pid=60974)[0m       "n": 8,
+[36m(Runner pid=60974)[0m       "temperature": 1.0,
+[36m(Runner pid=60974)[0m       "top_p": 1.0,
+[36m(Runner pid=60974)[0m       "top_k": -1,
+[36m(Runner pid=60974)[0m       "limit_images": 2,
+[36m(Runner pid=60974)[0m       "dtype": "bf16",
+[36m(Runner pid=60974)[0m       "gpu_memory_utilization": 0.6,
+[36m(Runner pid=60974)[0m       "ignore_eos": false,
+[36m(Runner pid=60974)[0m       "enforce_eager": false,
+[36m(Runner pid=60974)[0m       "enable_chunked_prefill": false,
+[36m(Runner pid=60974)[0m       "tensor_parallel_size": 2,
+[36m(Runner pid=60974)[0m       "max_num_batched_tokens": 65536,
+[36m(Runner pid=60974)[0m       "max_num_seqs": 1024,
+[36m(Runner pid=60974)[0m       "disable_log_stats": true,
+[36m(Runner pid=60974)[0m       "val_override_config": {
+[36m(Runner pid=60974)[0m         "temperature": 0.5,
+[36m(Runner pid=60974)[0m         "n": 1
+[36m(Runner pid=60974)[0m       },
+[36m(Runner pid=60974)[0m       "prompt_length": 32000,
+[36m(Runner pid=60974)[0m       "response_length": 2048
+[36m(Runner pid=60974)[0m     }
+[36m(Runner pid=60974)[0m   },
+[36m(Runner pid=60974)[0m   "algorithm": {
+[36m(Runner pid=60974)[0m     "gamma": 1.0,
+[36m(Runner pid=60974)[0m     "lam": 1.0,
+[36m(Runner pid=60974)[0m     "adv_estimator": "grpo",
+[36m(Runner pid=60974)[0m     "disable_kl": true,
+[36m(Runner pid=60974)[0m     "use_kl_loss": true,
+[36m(Runner pid=60974)[0m     "kl_penalty": "low_var_kl",
+[36m(Runner pid=60974)[0m     "kl_coef": 0.0,
+[36m(Runner pid=60974)[0m     "kl_type": "fixed",
+[36m(Runner pid=60974)[0m     "kl_horizon": 0.0,
+[36m(Runner pid=60974)[0m     "kl_target": 0.0,
+[36m(Runner pid=60974)[0m     "enable_replay": true
+[36m(Runner pid=60974)[0m   },
+[36m(Runner pid=60974)[0m   "trainer": {
+[36m(Runner pid=60974)[0m     "total_episodes": 15,
+[36m(Runner pid=60974)[0m     "max_steps": null,
+[36m(Runner pid=60974)[0m     "project_name": "Safety_GUI",
+[36m(Runner pid=60974)[0m     "experiment_name": "safety_osharm_task",
+[36m(Runner pid=60974)[0m     "logger": [
+[36m(Runner pid=60974)[0m       "console",
+[36m(Runner pid=60974)[0m       "wandb"
+[36m(Runner pid=60974)[0m     ],
+[36m(Runner pid=60974)[0m     "nnodes": 1,
+[36m(Runner pid=60974)[0m     "n_gpus_per_node": 8,
+[36m(Runner pid=60974)[0m     "critic_warmup": 0,
+[36m(Runner pid=60974)[0m     "val_freq": 16,
+[36m(Runner pid=60974)[0m     "val_before_train": false,
+[36m(Runner pid=60974)[0m     "val_only": false,
+[36m(Runner pid=60974)[0m     "val_generations_to_log": 3,
+[36m(Runner pid=60974)[0m     "save_freq": 16,
+[36m(Runner pid=60974)[0m     "save_limit": 3,
+[36m(Runner pid=60974)[0m     "save_checkpoint_path": "checkpoints/Safety_GUI/safety_osharm_task",
+[36m(Runner pid=60974)[0m     "load_checkpoint_path": null
+[36m(Runner pid=60974)[0m   },
+[36m(Runner pid=60974)[0m   "env": {
+[36m(Runner pid=60974)[0m     "num_envs": 16,
+[36m(Runner pid=60974)[0m     "max_steps": 2,
+[36m(Runner pid=60974)[0m     "screen_size": [
+[36m(Runner pid=60974)[0m       1920,
+[36m(Runner pid=60974)[0m       1080
+[36m(Runner pid=60974)[0m     ],
+[36m(Runner pid=60974)[0m     "use_remote_env": false,
+[36m(Runner pid=60974)[0m     "remote_env_config": null
+[36m(Runner pid=60974)[0m   },
+[36m(Runner pid=60974)[0m   "absolute_zero": {
+[36m(Runner pid=60974)[0m     "enabled": true,
+[36m(Runner pid=60974)[0m     "proposal_frequency": 5,
+[36m(Runner pid=60974)[0m     "seed_task_ratio": 0.7,
+[36m(Runner pid=60974)[0m     "max_proposed_tasks_cache": 100,
+[36m(Runner pid=60974)[0m     "enable_harm_proposal": true,
+[36m(Runner pid=60974)[0m     "harm_task_ratio": 0.2,
+[36m(Runner pid=60974)[0m     "harm_temperature": 0.8,
+[36m(Runner pid=60974)[0m     "harm_types": null,
+[36m(Runner pid=60974)[0m     "enable_task_proposal": true,
+[36m(Runner pid=60974)[0m     "task_temperature": 0.7,
+[36m(Runner pid=60974)[0m     "proposal_types": null,
+[36m(Runner pid=60974)[0m     "enable_learnability_reward": true,
+[36m(Runner pid=60974)[0m     "learnability_threshold": 0.3,
+[36m(Runner pid=60974)[0m     "enable_learnability_validation": true,
+[36m(Runner pid=60974)[0m     "learnability_num_samples": 5,
+[36m(Runner pid=60974)[0m     "learnability_max_attempts": 3,
+[36m(Runner pid=60974)[0m     "learnability_safety_threshold": 0.5,
+[36m(Runner pid=60974)[0m     "learnability_min_safe_ratio": 0.3,
+[36m(Runner pid=60974)[0m     "learnability_max_safe_ratio": 0.7,
+[36m(Runner pid=60974)[0m     "learnability_completion_threshold": 0.5,
+[36m(Runner pid=60974)[0m     "learnability_min_incomplete_ratio": 0.3,
+[36m(Runner pid=60974)[0m     "learnability_max_incomplete_ratio": 0.7,
+[36m(Runner pid=60974)[0m     "learnability_min_harmful_ratio": 0.3,
+[36m(Runner pid=60974)[0m     "learnability_max_harmful_ratio": 0.7,
+[36m(Runner pid=60974)[0m     "safety_reward_weight": 0.7,
+[36m(Runner pid=60974)[0m     "task_completion_weight": 0.3,
+[36m(Runner pid=60974)[0m     "completion_evaluator_type": "rule",
+[36m(Runner pid=60974)[0m     "max_repropose_attempts": 3,
+[36m(Runner pid=60974)[0m     "debug_random_scores": true
+[36m(Runner pid=60974)[0m   }
+[36m(Runner pid=60974)[0m }
+[36m(Runner pid=60974)[0m KL is disabled, no KL metrics will be logged. Please set `kl_coef=0` to log KL metrics.
+Traceback (most recent call last):
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/localnvme/agent/tjy/ARPO/verl/trainer/main.py", line 110, in <module>
+    main()
+  File "/localnvme/agent/tjy/ARPO/verl/trainer/main.py", line 106, in main
+    ray.get(runner.run.remote(ppo_config))
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/site-packages/ray/_private/auto_init_hook.py", line 21, in auto_init_wrapper
+    return fn(*args, **kwargs)
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/site-packages/ray/_private/worker.py", line 2755, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+  File "/home/dongyinpeng/miniconda3/envs/arpo_train/lib/python3.10/site-packages/ray/_private/worker.py", line 906, in get_objects
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(RuntimeError): [36mray::Runner.run()[39m (pid=60974, ip=10.220.5.126, actor_id=5760c02fba4bd592e62e231501000000, repr=<main.Runner object at 0x7f2f8fc5a980>)
+  File "/localnvme/agent/tjy/ARPO/verl/trainer/main.py", line 73, in run
+    trainer = RayPPOTrainer(
+  File "/localnvme/agent/tjy/ARPO/verl/trainer/ray_trainer.py", line 301, in __init__
+    self._create_envs()
+  File "/localnvme/agent/tjy/ARPO/verl/trainer/ray_trainer.py", line 1477, in _create_envs
+    raise RuntimeError("没找到任何 IP 资源标签，请检查 ray start 时 --resources 参数")
+RuntimeError: 没找到任何 IP 资源标签，请检查 ray start 时 --resources 参数
+[36m(Runner pid=60974)[0m PPOConfig(data=DataConfig(train_files='evaluation_examples/test_success_uitars1.5_wo_impossible.json', val_files='evaluation_examples/test_success_uitars1.5_wo_impossible.json', prompt_key='problem', answer_key='answer', image_key='images', max_prompt_length=32000, max_response_length=2048, rollout_batch_size=2, val_batch_size=-1, format_prompt='You are helpful assistant.', shuffle=True, seed=1, max_pixels=2116800, min_pixels=256), worker=WorkerConfig(hybrid_engine=True, actor=ActorConfig(strategy='fsdp', global_batch_size=1, micro_batch_size_per_device_for_update=1, micro_batch_size_per_device_for_experience=1, max_grad_norm=1.0, clip_ratio_low=0.2, clip_ratio_high=0.3, clip_ratio_dual=3.0, ppo_epochs=1, padding_free=True, ulysses_sequence_parallel_size=1, use_torch_compile=True, model=ModelConfig(model_path='/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B', tokenizer_path='/home/dongyinpeng/mnt/models/UI-TARS-1.5-7B', override_config={}, enable_gradient_checkpointing=True, trust_remote_code=False, freeze_vision_tower=False), optim=OptimConfig(lr=1e-06, betas=[0.9, 0.999], weight_decay=0.01, strategy='adamw_bf16', lr_warmup_ratio=0.05, min_lr_ratio=None, warmup_style='constant', training_steps=-1), fsdp=FSDPConfig(enable_full_shard=True, enable_cpu_offload=False, enable_rank0_init=True, use_orig_params=False, torch_dtype='bf16', fsdp_size=-1, mp_param_dtype='bf16', mp_reduce_dtype='fp32', mp_buffer_dtype='fp32'), offload=OffloadConfig(offload_params=True, offload_optimizer=True), global_batch_size_per_device=-1, disable_kl=True, use_kl_loss=True, kl_penalty='low_var_kl', kl_coef=0.0), critic=CriticConfig(strategy='fsdp', global_batch_size=256, micro_batch_size_per_device_for_update=4, micro_batch_size_per_device_for_experience=16, max_grad_norm=1.0, cliprange_value=0.5, ppo_epochs=1, padding_free=False, ulysses_sequence_parallel_size=1, model=ModelConfig(model_path=None, tokenizer_path=None, override_config={}, enable_gradient_checkpointing=True, trust_remote_code=True, freeze_vision_tower=False), optim=OptimConfig(lr=1e-06, betas=[0.9, 0.999], weight_decay=0.01, strategy='adamw', lr_warmup_ratio=0.0, min_lr_ratio=None, warmup_style='constant', training_steps=-1), fsdp=FSDPConfig(enable_full_shard=True, enable_cpu_offload=False, enable_rank0_init=False, use_orig_params=False, torch_dtype=None, fsdp_size=-1, mp_param_dtype='bf16', mp_reduce_dtype='fp32', mp_buffer_dtype='fp32'), offload=OffloadConfig(offload_params=False, offload_optimizer=False), global_batch_size_per_device=-1), ref=RefConfig(strategy='fsdp', fsdp=FSDPConfig(enable_full_shard=True, enable_cpu_offload=True, enable_rank0_init=True, use_orig_params=False, torch_dtype=None, fsdp_size=-1, mp_param_dtype='bf16', mp_reduce_dtype='fp32', mp_buffer_dtype='fp32'), offload=OffloadConfig(offload_params=False, offload_optimizer=False), micro_batch_size_per_device_for_experience=1, padding_free=True, ulysses_sequence_parallel_size=1, use_torch_compile=True), reward=RewardConfig(reward_type='function', score_function='math', skip_special_tokens=True, harm_config=HarmRewardConfig(safety_weight=1.0, task_completion_weight=0.5, format_weight=0.1, safety_threshold=0.5, enable_learnability_bonus=True, learnability_weight=0.1, target_difficulty=0.5, evaluator_config=HarmEvaluatorConfig(evaluator_type='openai', model_name='gpt-4', api_key='sk-wIfAFRigBsJx1nBzzpQnVsyjloVy1ZXSfEj4ZzFZsuAldefd', api_base='http://149.88.91.225:3000/v1', temperature=0.0, max_tokens=1024, timeout=60.0, max_retries=3, retry_delay=1.0, batch_size=10, use_async=True), use_llm_evaluation=True), use_harm_reward_for_harm_tasks=True), rollout=RolloutConfig(name='vllm', n=8, temperature=1.0, top_p=1.0, top_k=-1, limit_images=2, dtype='bf16', gpu_memory_utilization=0.6, ignore_eos=False, enforce_eager=False, enable_chunked_prefill=False, tensor_parallel_size=2, max_num_batched_tokens=65536, max_num_seqs=1024, disable_log_stats=True, val_override_config={'temperature': 0.5, 'n': 1}, prompt_length=32000, response_length=2048)), algorithm=AlgorithmConfig(gamma=1.0, lam=1.0, adv_estimator='grpo', disable_kl=True, use_kl_loss=True, kl_penalty='low_var_kl', kl_coef=0.0, kl_type='fixed', kl_horizon=0.0, kl_target=0.0, enable_replay=True), trainer=TrainerConfig(total_episodes=15, max_steps=None, project_name='Safety_GUI', experiment_name='safety_osharm_task', logger=['console', 'wandb'], nnodes=1, n_gpus_per_node=8, critic_warmup=0, val_freq=16, val_before_train=False, val_only=False, val_generations_to_log=3, save_freq=16, save_limit=3, save_checkpoint_path='checkpoints/Safety_GUI/safety_osharm_task', load_checkpoint_path=None), env=EnvConfig(num_envs=16, max_steps=2, screen_size=[1920, 1080], use_remote_env=False, remote_env_config=None), absolute_zero=AbsoluteZeroConfig(enabled=True, proposal_frequency=5, seed_task_ratio=0.7, max_proposed_tasks_cache=100, enable_harm_proposal=True, harm_task_ratio=0.2, harm_temperature=0.8, harm_types=None, enable_task_proposal=True, task_temperature=0.7, proposal_types=None, enable_learnability_reward=True, learnability_threshold=0.3, enable_learnability_validation=True, learnability_num_samples=5, learnability_max_attempts=3, learnability_safety_threshold=0.5, learnability_min_safe_ratio=0.3, learnability_max_safe_ratio=0.7, learnability_completion_threshold=0.5, learnability_min_incomplete_ratio=0.3, learnability_max_incomplete_ratio=0.7, learnability_min_harmful_ratio=0.3, learnability_max_harmful_ratio=0.7, safety_reward_weight=0.7, task_completion_weight=0.3, completion_evaluator_type='rule', max_repropose_attempts=3, debug_random_scores=True))
+[36m(Runner pid=60974)[0m Size of train dataloader: 64
+[36m(Runner pid=60974)[0m Size of val dataloader: 8
+[36m(Runner pid=60974)[0m Total training steps: 960
+[36m(Runner pid=60974)[0m Start to create env_worker for OSWorld Environment
+[36m(Runner pid=60974)[0m Using EnvWorker as environment worker class.

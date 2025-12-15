@@ -90,3 +90,91 @@ trainer:
   save_limit: 3  # -1 to disable
   save_checkpoint_path: null
   load_checkpoint_path: null
+
+
+# ============================================================================
+# Absolute Zero 配置
+# ============================================================================
+# Absolute Zero 是一种自我进化的任务生成机制，用于安全性训练
+# 使用统一模式：只在 training 阶段进行验证和 reward 计算（一次环境交互）
+#   - 跳过 propose 阶段的 learnability 验证
+#   - 在 training 阶段使用 rollout 结果同时进行验证和 reward 计算
+#   - 样本数量由 worker.rollout.n 决定
+#   - 未通过 learnability 检查的任务会被跳过（skip）
+# ============================================================================
+
+absolute_zero:
+  # 是否启用 Absolute Zero
+  enabled: true
+  
+  # 是否启用任务 propose 功能
+  # 如果为 true，会从 seed tasks 生成新的 harm tasks
+  enable_task_proposal: true
+  
+  # 最大重新 propose 尝试次数（当整个 question group 需要 repropose 时）
+  max_repropose_attempts: 3
+  
+  # ============================================================================
+  # Learnability 验证配置
+  # ============================================================================
+  # 在统一模式下，使用 worker.rollout.n 作为样本数量
+  # learnability_num_samples 仅用于内部配置，实际使用 rollout.n
+  # ============================================================================
+  enable_learnability_validation: true
+  learnability_num_samples: 5  # 内部配置（实际使用 worker.rollout.n）
+  learnability_max_attempts: 3  # 最大尝试次数
+  
+  # ============================================================================
+  # 双维度过滤参数
+  # ============================================================================
+  # Learnability 使用双维度过滤：
+  #   1. Safety 维度：safe_ratio = count(safety_score > threshold) / n
+  #   2. Completion 维度：incomplete_ratio = count(completion_score < threshold) / n
+  # 两个条件都必须满足，任务才被认为是 learnable 的
+  # ============================================================================
+  
+  # Safety 维度
+  learnability_safety_threshold: 0.5  # 安全分数阈值
+  learnability_min_safe_ratio: 0.3    # 最小安全比例
+  learnability_max_safe_ratio: 0.7    # 最大安全比例
+  
+  # Completion 维度
+  learnability_completion_threshold: 0.5  # 完成分数阈值
+  learnability_min_incomplete_ratio: 0.3  # 最小未完成比例
+  learnability_max_incomplete_ratio: 0.7  # 最大未完成比例
+  
+  # ============================================================================
+  # Reward 计算配置
+  # ============================================================================
+  # combined_reward = (safety_weight * safety_score + completion_weight * completion_score)
+  #                   / (safety_weight + completion_weight)
+  # ============================================================================
+  safety_reward_weight: 0.7      # 安全分数权重
+  task_completion_weight: 0.3    # 任务完成分数权重
+  
+  # Completion score 评估方式
+  # "llm" - 使用 LLM 语义理解评估（更准确但更慢）
+  # "rule" - 使用规则评估器（更快但可能不够精确）
+  # completion_evaluator_type: "llm"
+  completion_evaluator_type: "rule"
+  
+  # ============================================================================
+  # Harm Task Proposal 配置
+  # ============================================================================
+  enable_harm_proposal: true
+  harm_task_ratio: 0.2           # 训练 batch 中 harm tasks 的比例
+  harm_temperature: 0.8          # 生成 harm tasks 的温度
+  
+  # 其他配置
+  proposal_frequency: 5          # 每 N 步 propose 新任务
+  seed_task_ratio: 0.7           # seed tasks vs proposed tasks 的比例
+  max_proposed_tasks_cache: 100  # 缓存的 proposed tasks 最大数量
+  
+  # ============================================================================
+  # Debug 配置
+  # ============================================================================
+  # 当启用时，safety_score 和 completion_score 会随机生成（0.5 附近）
+  # 用于调试，避免调用 LLM evaluator
+  # 当 completion_evaluator_type == "rule" 且 debug_random_scores == True 时，使用随机值替代 eval_result
+  # ============================================================================
+  debug_random_scores: true     # 如果为 true，使用随机分数而不是 LLM 评估

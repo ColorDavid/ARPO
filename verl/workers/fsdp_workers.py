@@ -434,6 +434,8 @@ class FSDPWorker(Worker):
         if self._use_optimizer_offload:
             load_fsdp_optimizer(optimizer=self.optimizer)
 
+        # torch.cuda.empty_cache()
+        # torch.cuda.synchronize()
         with self.ulysses_sharding_manager:
             data = self.ulysses_sharding_manager.preprocess_data(data=data)
             with Timer(name="update_policy", logger=None) as timer:
@@ -490,6 +492,8 @@ class FSDPWorker(Worker):
     def finish_generate_sequences(self):
         assert self._is_rollout
         self.rollout_sharding_manager.__exit__(None, None, None)
+        # torch.cuda.empty_cache()
+        # torch.cuda.synchronize()
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def generate_sequences(self, prompts: DataProto) -> DataProto:
@@ -539,6 +543,8 @@ class FSDPWorker(Worker):
         data = data.to(torch.cuda.current_device())
         if self._use_param_offload:
             load_fsdp_model(self.fsdp_module)
+            
+        # torch.cuda.empty_cache()
 
         # we should always recompute old_log_probs when it is HybridEngine
         data.meta_info["temperature"] = self.config.rollout.temperature

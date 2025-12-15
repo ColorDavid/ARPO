@@ -141,9 +141,11 @@ class vLLMRollout(BaseRollout):
 
         # users can customize different sampling_params at different run
         with self.update_sampling_params(**prompts.meta_info):
+            print(f'[vLLM] Starting generation for {len(vllm_inputs)} prompts, rank={self.rank}')
             completions: List[RequestOutput] = self.inference_engine.generate(
                 prompts=vllm_inputs, sampling_params=self.sampling_params, use_tqdm=(self.rank == 0)
             )
+            print(f'[vLLM] Generation completed, got {len(completions)} completions, rank={self.rank}')
             response_ids = [output.token_ids for completion in completions for output in completion.outputs]
             response_ids = VF.pad_2d_list_to_length(
                 response_ids, self.pad_token_id, max_length=self.config.response_length

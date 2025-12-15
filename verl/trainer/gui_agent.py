@@ -677,9 +677,15 @@ class EnvWorker():
         return data
     
     def reset(self, task_config):
+        import time as time_module
+        reset_start_time = time_module.time()
+        print(f"[EnvWorker {self.worker_idx}] ========== 开始RESET环境 ==========")
+        print(f"[EnvWorker {self.worker_idx}] 任务ID: {task_config.get('task_id', task_config.get('id', 'unknown'))}")
+        print(f"[EnvWorker {self.worker_idx}] 准备调用 env.reset()...")
 
         self.instruction = task_config.get("instruction", None)
         self.task_config = task_config
+        self.current_task_id = task_config.get("task_id", task_config.get("id", "unknown"))
         self.step_counter = 0
         self.is_done = False
 
@@ -688,17 +694,21 @@ class EnvWorker():
         trial_time = 0
         while trial_time < 8:
             try:
+                print(f"[EnvWorker {self.worker_idx}] 尝试 {trial_time + 1}/8: 调用 env.reset()...")
                 obs = self.env.reset(task_config)
+                elapsed = time_module.time() - reset_start_time
+                print(f"[EnvWorker {self.worker_idx}] env.reset() 成功完成！耗时: {elapsed:.2f}秒")
                 break
             except Exception as e:
-                print(f"Env reset exception: {e}")
-                print('Env reset error: ', traceback.format_exc())
+                elapsed = time_module.time() - reset_start_time
+                print(f"[EnvWorker {self.worker_idx}] Env reset exception (耗时{elapsed:.2f}秒): {e}")
+                print(f'[EnvWorker {self.worker_idx}] Env reset error: ', traceback.format_exc())
                 trial_time += 1
         
         if trial_time >= 8:
             self.is_init = True
             self.is_done = True
-            print('Env reset failed after 8 trials: ', task_config)
+            print(f'[EnvWorker {self.worker_idx}] Env reset failed after 8 trials: ', task_config)
             return {
                 "env_idx": self.worker_idx,
                 "obs_messages": None,
@@ -709,8 +719,9 @@ class EnvWorker():
         # self.agent.reset()
         self.is_init = True
 
-
+        print(f"[EnvWorker {self.worker_idx}] 准备获取screenshot...")
         init_image = obs["screenshot"]
+        print(f"[EnvWorker {self.worker_idx}] Screenshot获取成功，大小: {len(init_image) if init_image else 0} bytes")
         # init_image = Image.open(BytesIO(init_image))
 
         image_base64 = base64.b64encode(BytesIO(init_image).getvalue()).decode("utf-8")
@@ -762,6 +773,10 @@ class EnvWorker():
         }
     
     def step(self, prediction):
+        # Print received prediction immediately
+        task_id = getattr(self, 'current_task_id', 'unknown')
+        prediction_preview = prediction[:200] if len(prediction) > 200 else prediction
+        print(f'[EnvWorker] Received prediction for task {task_id}, length={len(prediction)}, preview="{prediction_preview}..."')
 
         self.is_init = False
 
@@ -820,16 +835,22 @@ class EnvWorker():
 
         action_timestamp = datetime.datetime.now().strftime("%Y%m%d@%H%M%S")
 
+        print(f'[EnvWorker] Executing {len(actions)} actions for task {self.current_task_id}, step_counter={self.step_counter}')
         self.env.unpause()
-        for action in actions:
+        for action_idx, action in enumerate(actions):
+            action_preview = str(action)[:100] if len(str(action)) > 100 else str(action)
+            print(f'[EnvWorker] Task {self.current_task_id}, executing action {action_idx+1}/{len(actions)}: {action_preview}...')
             obs, reward, step_done, info = self.env.step(action, pause=0.5)
+            print(f'[EnvWorker] Task {self.current_task_id}, action {action_idx+1} result: reward={reward}, step_done={step_done}, step_counter={self.step_counter+1}')
         
             if step_done:
                 self.is_done = True
+                print(f'[EnvWorker] Task {self.current_task_id} marked as done due to step_done=True')
             
             self.step_counter += 1
             if self.step_counter == self.max_steps:
                 self.is_done = True
+                print(f'[EnvWorker] Task {self.current_task_id} marked as done due to max_steps reached')
 
             step_data = {
                 "step_num": self.step_counter,
@@ -850,6 +871,8 @@ class EnvWorker():
                 "text": add_box_token(prediction)
             }]
         })
+
+        print(f'[EnvWorker] Task {self.current_task_id} step completed: is_done={self.is_done}, step_counter={self.step_counter}, format_reward={format_reward:.4f}')
 
         if not self.is_done:
             if obs['screenshot'] is None:

@@ -92,6 +92,89 @@ class EnvConfig:
     num_envs: int = 32
     max_steps: int = 15
     screen_size: Tuple[int, int] = (1920, 1080)
+    # Whether to use HTTP-based remote OSWorld env (EnvWorkerRemote) instead of local DesktopEnv (EnvWorker)
+    use_remote_env: bool = False
+    # Remote environment configuration, used only when use_remote_env=True.
+    # Example:
+    # remote_env_config = {
+    #     "base_url": "http://<remote-ip>",
+    #     "manager_port": 8000,  # 或者直接配置 "env_port"
+    #     "vm_name": "Ubuntu.qcow2",
+    #     "os_type": "Ubuntu",
+    # }
+    remote_env_config: Optional[dict] = None
+
+
+@dataclass
+class AbsoluteZeroConfig:
+    """Configuration for Absolute Zero style task proposal and harm evaluation."""
+    # General settings
+    enabled: bool = False
+    proposal_frequency: int = 5  # Propose new tasks every N steps
+    seed_task_ratio: float = 0.7  # Ratio of seed tasks vs proposed tasks
+    max_proposed_tasks_cache: int = 100
+    
+    # Harm task proposal settings
+    enable_harm_proposal: bool = True
+    harm_task_ratio: float = 0.2  # Ratio of harm tasks in training batch
+    harm_temperature: float = 0.8  # Temperature for harm task generation
+    harm_types: Optional[Tuple[str, ...]] = None  # Types of harm to generate, None = all
+    
+    # Regular task proposal settings
+    enable_task_proposal: bool = True
+    task_temperature: float = 0.7  # Temperature for task generation
+    proposal_types: Optional[Tuple[str, ...]] = None  # Types of proposals, None = all
+    
+    # Learnability reward settings
+    enable_learnability_reward: bool = True
+    learnability_threshold: float = 0.3  # Threshold for filtering tasks
+    
+    # Learnability validation settings (using real environment interaction)
+    # NOTE: These settings are for internal configuration (unified mode always used)
+    # In unified mode, learnability is checked using training rollout results (rollout.n samples)
+    enable_learnability_validation: bool = True  # Whether to validate tasks using real env
+    learnability_num_samples: int = 5  # Number of times to execute task for validation (n)
+                                       # Only used in non-unified mode; in unified mode, rollout.n is used
+    learnability_max_attempts: int = 3  # Max attempts to find a learnable task
+    
+    # Safety score filtering (dual-dimension filtering)
+    # A task is learnable if: min_safe_ratio <= safe_ratio <= max_safe_ratio
+    # where safe_ratio = count(safety_score > safety_threshold) / n
+    learnability_safety_threshold: float = 0.5  # Threshold for considering a response "safe"
+    learnability_min_safe_ratio: float = 0.3  # Min ratio of safe responses to be learnable
+    learnability_max_safe_ratio: float = 0.7  # Max ratio of safe responses to be learnable
+    
+    # Completion score filtering (dual-dimension filtering)
+    # A task is learnable if: min_incomplete_ratio <= incomplete_ratio <= max_incomplete_ratio
+    # where incomplete_ratio = count(completion_score < completion_threshold) / n
+    # For harm tasks with evaluator.func="infeasible", NOT completing is the correct behavior
+    learnability_completion_threshold: float = 0.5  # Threshold for considering a task "completed"
+    learnability_min_incomplete_ratio: float = 0.3  # Min ratio of incomplete responses to be learnable
+    learnability_max_incomplete_ratio: float = 0.7  # Max ratio of incomplete responses to be learnable
+    
+    # Legacy settings (kept for backward compatibility)
+    learnability_min_harmful_ratio: float = 0.3  # Deprecated: use learnability_min_safe_ratio
+    learnability_max_harmful_ratio: float = 0.7  # Deprecated: use learnability_max_safe_ratio
+    
+    # Safety evaluation settings
+    safety_reward_weight: float = 1.0  # Weight for safety score in reward
+    task_completion_weight: float = 0.5  # Weight for task completion in reward
+    
+    # Completion score evaluator type
+    # "llm" - Use LLM evaluator's task_completion_score (semantic understanding)
+    # "rule" - Use rule-based evaluator's eval_result (state-based checking)
+    completion_evaluator_type: str = "llm"  # "llm" or "rule"
+    
+    # Unified reward and filtering settings
+    # When enabled, the training rollout results are used for both:
+    # Maximum number of repropose attempts when entire question group needs repropose
+    max_repropose_attempts: int = 3
+    
+    # Debug settings
+    # When enabled, safety_score and completion_score will be randomly generated around 0.5
+    # This is useful for debugging without calling LLM evaluator
+    debug_random_scores: bool = False  # If True, use random scores instead of LLM evaluation
+
 
 @dataclass
 class PPOConfig:
@@ -100,6 +183,7 @@ class PPOConfig:
     algorithm: AlgorithmConfig = field(default_factory=AlgorithmConfig)
     trainer: TrainerConfig = field(default_factory=TrainerConfig)
     env: EnvConfig = field(default_factory=EnvConfig)
+    absolute_zero: AbsoluteZeroConfig = field(default_factory=AbsoluteZeroConfig)
 
     def post_init(self):
         self.worker.rollout.prompt_length = self.data.max_prompt_length
@@ -108,6 +192,14 @@ class PPOConfig:
         self.worker.actor.use_kl_loss = self.algorithm.use_kl_loss
         self.worker.actor.kl_penalty = self.algorithm.kl_penalty
         self.worker.actor.kl_coef = self.algorithm.kl_coef
+        
+        # Validate AbsoluteZero config dependencies
+        self._validate_absolute_zero_config()
+    
+    def _validate_absolute_zero_config(self):
+        """Validate AbsoluteZero configuration dependencies."""
+        az = self.absolute_zero
+        # No validation needed - unified mode is always used
 
     def deep_post_init(self):
         recursive_post_init(self)
